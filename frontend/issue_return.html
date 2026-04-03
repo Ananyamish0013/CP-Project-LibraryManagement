@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue/Return - LibrarySys</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="brand">📚 LibrarySys</a>
+            <div class="nav-links">
+                <a href="index.html">Catalog</a>
+                <a href="add_book.html">Add Book</a>
+                <a href="issue_return.html" class="active">Issue / Return</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="page-header">
+            <h1>Transaction Desk</h1>
+        </div>
+
+        <div class="grid-2">
+            <!-- Issue Block -->
+            <div class="form-container" style="margin: 0; max-width: 100%;">
+                <h2>Issue a Book</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem">Select a user and an available book.</p>
+                <form id="issueForm">
+                    <div class="form-group">
+                        <label for="issueUser">Select User</label>
+                        <select id="issueUser" required>
+                            <option value="">Loading users...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="issueBook">Select Book</label>
+                        <select id="issueBook" required>
+                            <option value="">Loading available books...</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%">Issue Book</button>
+                    
+                </form>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
+                <h4>Or create a new user:</h4>
+                <form id="addUserForm" style="margin-top: 1rem;">
+                    <div style="display: flex; gap: 0.5rem">
+                        <input type="text" id="newUserName" placeholder="Name" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius)">
+                        <input type="email" id="newUserEmail" placeholder="Email" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius)">
+                        <button type="submit" class="btn">Add</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Return Block -->
+            <div class="form-container" style="margin: 0; max-width: 100%;">
+                <h2>Return a Book</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem">Select a currently issued book to return.</p>
+                <form id="returnForm">
+                    <div class="form-group">
+                        <label for="returnBook">Issued Book</label>
+                        <select id="returnBook" required>
+                            <option value="">Loading issued books...</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary" style="width: 100%">Return Book</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const issueUserSelect = document.getElementById('issueUser');
+            const issueBookSelect = document.getElementById('issueBook');
+            const returnBookSelect = document.getElementById('returnBook');
+
+            async function loadDropdowns() {
+                try {
+                    const [users, books] = await Promise.all([
+                        api.getUsers(),
+                        api.getBooks()
+                    ]);
+
+                    // Populate users
+                    issueUserSelect.innerHTML = '<option value="">Select User...</option>' + 
+                        users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+
+                    // Populate available books
+                    const availableBooks = books.filter(b => b.availability);
+                    issueBookSelect.innerHTML = '<option value="">Select Available Book...</option>' + 
+                        availableBooks.map(b => `<option value="${b.id}">${b.title} by ${b.author}</option>`).join('');
+
+                    // Populate issued books
+                    const issuedBooks = books.filter(b => !b.availability);
+                    returnBookSelect.innerHTML = '<option value="">Select Issued Book...</option>' + 
+                        issuedBooks.map(b => `<option value="${b.id}">${b.title} by ${b.author}</option>`).join('');
+
+                } catch (error) {
+                    showToast('Failed to load data for dropdowns', 'error');
+                }
+            }
+
+            // Forms handling
+            document.getElementById('issueForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = {
+                    user_id: parseInt(issueUserSelect.value),
+                    book_id: parseInt(issueBookSelect.value)
+                };
+                try {
+                    const res = await api.issueBook(data);
+                    showToast(res.message, 'success');
+                    loadDropdowns(); // Refresh dropdowns
+                } catch (err) { showToast(err.message, 'error'); }
+            });
+
+            document.getElementById('returnForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = { book_id: parseInt(returnBookSelect.value) };
+                try {
+                    const res = await api.returnBook(data);
+                    showToast(res.message, 'success');
+                    loadDropdowns(); // Refresh dropdowns
+                } catch (err) { showToast(err.message, 'error'); }
+            });
+
+            document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = {
+                    name: document.getElementById('newUserName').value,
+                    email: document.getElementById('newUserEmail').value
+                };
+                try {
+                    const res = await api.addUser(data);
+                    showToast(res.message, 'success');
+                    e.target.reset();
+                    loadDropdowns();
+                } catch (err) { showToast(err.message, 'error'); }
+            });
+
+            // Init
+            loadDropdowns();
+        });
+    </script>
+</body>
+</html>

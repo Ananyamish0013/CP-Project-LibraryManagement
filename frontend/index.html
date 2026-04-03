@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <meta name="description" content="Manage books with our elegant Library Management System.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="brand">📚 LibrarySys</a>
+            <div class="nav-links">
+                <a href="index.html" class="active">Catalog</a>
+                <a href="add_book.html">Add Book</a>
+                <a href="issue_return.html">Issue / Return</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="page-header">
+            <h1>Book Catalog</h1>
+            <a href="add_book.html" class="btn">+ New Book</a>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by title or author...">
+            <button id="searchBtn" class="btn">Search</button>
+        </div>
+
+        <div class="books-grid" id="booksGrid">
+            <!-- Books injected here by JS -->
+            <p>Loading catalog...</p>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('booksGrid');
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+
+            async function loadBooks(search = '') {
+                try {
+                    const books = await api.getBooks(search);
+                    renderBooks(books);
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    grid.innerHTML = '<p>Error loading books. Make sure backend is running.</p>';
+                }
+            }
+
+            function renderBooks(books) {
+                if (books.length === 0) {
+                    grid.innerHTML = '<p>No books found.</p>';
+                    return;
+                }
+                grid.innerHTML = books.map(book => `
+                    <div class="book-card">
+                        <span class="badge">${book.genre}</span>
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-author">By ${book.author}</div>
+                        <div class="${book.availability ? 'status status-available' : 'status status-issued'}">
+                            ${book.availability ? 'Available' : 'Issued'}
+                        </div>
+                        <div class="card-actions">
+                            <button onclick="deleteBook(${book.id})" class="btn-danger">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Expose delete to global scope for inline handler
+            window.deleteBook = async (id) => {
+                if(!confirm("Are you sure you want to delete this book?")) return;
+                try {
+                    const res = await api.deleteBook(id);
+                    showToast(res.message, 'success');
+                    loadBooks(searchInput.value);
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            };
+
+            searchBtn.addEventListener('click', () => loadBooks(searchInput.value));
+            searchInput.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') loadBooks(searchInput.value);
+            });
+
+            // Initial load
+            loadBooks();
+        });
+    </script>
+</body>
+</html>

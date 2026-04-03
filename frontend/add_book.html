@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Book - LibrarySys</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="brand">📚 LibrarySys</a>
+            <div class="nav-links">
+                <a href="index.html">Catalog</a>
+                <a href="add_book.html" class="active">Add Book</a>
+                <a href="issue_return.html">Issue / Return</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="page-header">
+            <h1>Add New Book</h1>
+        </div>
+
+        <div class="form-container">
+            <form id="addBookForm">
+                <div class="form-group">
+                    <label for="title">Book Title</label>
+                    <input type="text" id="title" required placeholder="e.g. The Great Gatsby">
+                </div>
+                <div class="form-group">
+                    <label for="author">Author Name</label>
+                    <input type="text" id="author" required placeholder="e.g. F. Scott Fitzgerald">
+                </div>
+                <div class="form-group">
+                    <label for="genre">Genre</label>
+                    <select id="genre" required>
+                        <option value="">Select a genre...</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Fantasy">Fantasy</option>
+                        <option value="Mystery">Mystery</option>
+                        <option value="Biography">Biography</option>
+                        <option value="Programming">Programming</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="width: 100%">Add Book to Library</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('addBookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Adding...';
+            btn.disabled = true;
+
+            const bookData = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                genre: document.getElementById('genre').value
+            };
+
+            try {
+                const res = await api.addBook(bookData);
+                showToast(res.message, 'success');
+                e.target.reset();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.textContent = 'Add Book to Library';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
