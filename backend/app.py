@@ -34,11 +34,19 @@ def create_app():
         db.create_all()
 
     return app
+def create_app():
+    app = Flask(__name__)
 
-if __name__ == '__main__':
-    app = create_app()
-    # Run the Flask app on localhost, port 5000
-    app.run(debug=True, port=5000)
-    app.run()
-app = app
+    @app.route('/')
+    def home():
+        return "Library API is running 🚀"
+
+    # rest of your code...
+    return app
+
+# ✅ REQUIRED for Vercel
 app = create_app()
+
+# ✅ Only for local running
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

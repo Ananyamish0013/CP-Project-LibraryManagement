@@ -177,3 +177,6 @@ def get_issued_books():
     """Retrieve all issued books that have not yet been returned."""
     records = IssuedBook.query.filter(IssuedBook.return_date == None).all()
     return jsonify([record.to_dict() for record in records]), 200
+@api_blueprint.route('/')
+def home():
+    return "Library API is running "
