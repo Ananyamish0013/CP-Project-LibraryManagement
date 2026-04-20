@@ -29,9 +29,9 @@ def create_app():
     app.register_blueprint(api_blueprint, url_prefix='/api')
 
     # Automatically create tables when the app runs
-    with app.app_context():
-        import models  # Important to make SQLAlchemy aware of the models
-        db.create_all()
+    #with app.app_context():
+        #import models  # Important to make SQLAlchemy aware of the models
+        #db.create_all()
 
     return app
 def create_app():
