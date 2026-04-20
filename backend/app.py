@@ -39,3 +39,5 @@ if __name__ == '__main__':
     app = create_app()
     # Run the Flask app on localhost, port 5000
     app.run(debug=True, port=5000)
+    app.run()
+app = app
